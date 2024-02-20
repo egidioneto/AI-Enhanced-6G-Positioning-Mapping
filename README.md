@@ -34,12 +34,3 @@ We welcome contributions from scholars, developers, and enthusiasts interested i
 
 - **GitHub Issues:** Submit feature requests, suggestions, or bug reports.
 - **Pull Requests:** Contribute directly by submitting pull requests with improvements or new features.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Special thanks to the research community for their ongoing efforts in the fields of AI, indoor positioning, and 6G technologies.
-- Gratitude to all contributors and supporters of this project.
