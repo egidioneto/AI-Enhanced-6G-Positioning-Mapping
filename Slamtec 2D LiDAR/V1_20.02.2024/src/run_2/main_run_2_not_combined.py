@@ -98,25 +98,6 @@ def evaluate_model(model, X_test, y_test):
     for i in range(len(y_test)):
         print("Actual square:", y_test[i], "Predicted square:", y_pred[i])
 
-    # Calculate the precision of the model's predictions. Precision is the ratio of correctly predicted positive observations to the total predicted positives.
-    precision = precision_score(y_test, y_pred, average="samples", zero_division=1)
-
-    # Calculate the recall (sensitivity) of the model's predictions. Recall is the ratio of correctly predicted positive observations to the all observations in actual class.
-    recall = recall_score(y_test, y_pred, average="samples", zero_division=1)
-
-    # Calculate the F1 score of the model's predictions. The F1 Score is the weighted average of Precision and Recall.
-    f1 = f1_score(y_test, y_pred, average="samples", zero_division=1)
-
-    # Calculate the accuracy of the model's predictions. The accuracy is the ratio of correctly predicted observations to the total number of observations.
-    accuracy = accuracy_score(y_test, y_pred)
-    print(
-        "\n# ---------------------------------- Results --------------------------------- #"
-    )
-    print("Precision:", precision)
-    print("Accuracy:", accuracy)
-    print("Recall:", recall)
-    print("F1 Score:", f1)
-
     # Flatten the arrays to treat all label predictions as binary
     y_test_flat = y_test.flatten()
     y_pred_flat = y_pred.flatten()
@@ -127,22 +108,41 @@ def evaluate_model(model, X_test, y_test):
     FP = ((y_pred_flat == 1) & (y_test_flat == 0)).sum()
     FN = ((y_pred_flat == 0) & (y_test_flat == 1)).sum()
 
+    # Calculate Precision
+    precision = TP / (TP + FP) if (TP + FP) != 0 else 0
+
+    # Calculate Accuracy
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+
+    # Calculate Recall
+    recall = TP / (TP + FN) if (TP + FN) != 0 else 0
+
+    # Calculate F1 Score
+    f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) != 0 else 0
+
+    print("\n# ---------------------------------- Results --------------------------------- #")
+    print("Precision:", precision)
+    print("Accuracy:", accuracy)
+    print("Recall:", recall)
+    print("F1 Score:", f1)
+
     # Create a 2x2 confusion matrix
     general_cm = np.array([[TP, FP], [FN, TN]])
 
     # Plot the confusion matrix without colors
     plt.figure(figsize=(8, 6))
-    sns.heatmap(general_cm, annot=True, fmt="d", cmap='coolwarm', cbar=False)  # Using a default colormap
-    plt.ylabel('Predicted Label', fontsize=14)
-    plt.xlabel('Real Label', fontsize=14)
-    plt.title('Confusion Matrix', fontsize=16)
+    sns.heatmap(general_cm, annot=True, fmt="d", cmap="coolwarm", cbar=False)  # Using a default colormap
+    plt.ylabel("Predicted Label", fontsize=14)
+    plt.xlabel("Real Label", fontsize=14)
+    plt.title("Confusion Matrix", fontsize=16)
 
     # Define class labels and their positions
-    class_labels = ['Positive', 'Negative']
-    plt.xticks(ticks=np.arange(2) + 0.5, labels=class_labels, ha='center')
-    plt.yticks(ticks=np.arange(2) + 0.5, labels=class_labels, va='center', rotation=0)
+    class_labels = ["Positive", "Negative"]
+    plt.xticks(ticks=np.arange(2) + 0.5, labels=class_labels, ha="center")
+    plt.yticks(ticks=np.arange(2) + 0.5, labels=class_labels, va="center", rotation=0)
 
     plt.show()
+
 
 def predict_new_readings(model, readings, squares):
     # Preprocess new readings
@@ -296,22 +296,18 @@ num_quadrants = len(squares)
 # ----------------------------- Getting readings ----------------------------- #
 # Get array of readings
 print("Reading file...")
-readings_lidar1 = read_readings_from_file(
-    "corrected_lidar_1.txt", "data\\run_2"
-)
-readings_lidar2 = read_readings_from_file(
-    "corrected_lidar_2.txt", "data\\run_2"
-)
-readings_lidar3 = read_readings_from_file(
-    "corrected_lidar_3.txt", "data\\run_2"
-)
-readings_lidar4 = read_readings_from_file(
-    "corrected_lidar_4.txt", "data\\run_2"
-)
+readings_lidar1 = read_readings_from_file("corrected_lidar_1.txt", "data\\run_2")
+# readings_lidar2 = read_readings_from_file(
+#     "corrected_lidar_2.txt", "data\\run_2"
+# )
+readings_lidar3 = read_readings_from_file("corrected_lidar_3.txt", "data\\run_2")
+# readings_lidar4 = read_readings_from_file(
+#     "corrected_lidar_4.txt", "data\\run_2"
+# )
 print("Number of readings - Lidar 1:", len(readings_lidar1))
-print("Number of readings - Lidar 2:", len(readings_lidar2))
+# print("Number of readings - Lidar 2:", len(readings_lidar2))
 print("Number of readings - Lidar 3:", len(readings_lidar3))
-print("Number of readings - Lidar 4:", len(readings_lidar4))
+# print("Number of readings - Lidar 4:", len(readings_lidar4))
 
 #! In this case the readings are already filtered to a square of 4x4m
 
@@ -332,16 +328,12 @@ model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
 
 # Process your readings
 print("Processing readings...")
-X = process_readings(
-    [readings_lidar1, readings_lidar2, readings_lidar3, readings_lidar4], squares
-)  # Input
-y = np.concatenate([labels, labels, labels, labels])  # Labels *4
+X = process_readings([readings_lidar1, readings_lidar3], squares)  # Input
+y = np.concatenate([labels, labels])  # Labels *4
 # [0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0]
 
 # Split your data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train your model
 print("Training model...")

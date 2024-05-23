@@ -98,25 +98,6 @@ def evaluate_model(model, X_test, y_test):
     for i in range(len(y_test)):
         print("Actual square:", y_test[i], "Predicted square:", y_pred[i])
 
-    # Calculate the precision of the model's predictions. Precision is the ratio of correctly predicted positive observations to the total predicted positives.
-    precision = precision_score(y_test, y_pred, average="samples", zero_division=1)
-
-    # Calculate the recall (sensitivity) of the model's predictions. Recall is the ratio of correctly predicted positive observations to the all observations in actual class.
-    recall = recall_score(y_test, y_pred, average="samples", zero_division=1)
-
-    # Calculate the F1 score of the model's predictions. The F1 Score is the weighted average of Precision and Recall.
-    f1 = f1_score(y_test, y_pred, average="samples", zero_division=1)
-
-    # Calculate the accuracy of the model's predictions. The accuracy is the ratio of correctly predicted observations to the total number of observations.
-    accuracy = accuracy_score(y_test, y_pred)
-    print(
-        "\n# ---------------------------------- Results --------------------------------- #"
-    )
-    print("Precision:", precision)
-    print("Accuracy:", accuracy)
-    print("Recall:", recall)
-    print("F1 Score:", f1)
-
     # Flatten the arrays to treat all label predictions as binary
     y_test_flat = y_test.flatten()
     y_pred_flat = y_pred.flatten()
@@ -127,20 +108,38 @@ def evaluate_model(model, X_test, y_test):
     FP = ((y_pred_flat == 1) & (y_test_flat == 0)).sum()
     FN = ((y_pred_flat == 0) & (y_test_flat == 1)).sum()
 
+    # Calculate Precision
+    precision = TP / (TP + FP) if (TP + FP) != 0 else 0
+
+    # Calculate Accuracy
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+
+    # Calculate Recall
+    recall = TP / (TP + FN) if (TP + FN) != 0 else 0
+
+    # Calculate F1 Score
+    f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) != 0 else 0
+
+    print("\n# ---------------------------------- Results --------------------------------- #")
+    print("Precision:", precision)
+    print("Accuracy:", accuracy)
+    print("Recall:", recall)
+    print("F1 Score:", f1)
+
     # Create a 2x2 confusion matrix
     general_cm = np.array([[TP, FP], [FN, TN]])
 
     # Plot the confusion matrix without colors
     plt.figure(figsize=(8, 6))
-    sns.heatmap(general_cm, annot=True, fmt="d", cmap='coolwarm', cbar=False)  # Using a default colormap
-    plt.ylabel('Predicted Label', fontsize=14)
-    plt.xlabel('Real Label', fontsize=14)
-    plt.title('Confusion Matrix', fontsize=16)
+    sns.heatmap(general_cm, annot=True, fmt="d", cmap="coolwarm", cbar=False)  # Using a default colormap
+    plt.ylabel("Predicted Label", fontsize=14)
+    plt.xlabel("Real Label", fontsize=14)
+    plt.title("Confusion Matrix", fontsize=16)
 
     # Define class labels and their positions
-    class_labels = ['Positive', 'Negative']
-    plt.xticks(ticks=np.arange(2) + 0.5, labels=class_labels, ha='center')
-    plt.yticks(ticks=np.arange(2) + 0.5, labels=class_labels, va='center', rotation=0)
+    class_labels = ["Positive", "Negative"]
+    plt.xticks(ticks=np.arange(2) + 0.5, labels=class_labels, ha="center")
+    plt.yticks(ticks=np.arange(2) + 0.5, labels=class_labels, va="center", rotation=0)
 
     plt.show()
 
@@ -249,6 +248,19 @@ def plot_2d_graph_with_squares(readings, squares):
             ha="center",
             va="center",
         )
+
+    # Set the x and y limits of the plot
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+
+    # Set the aspect ratio to equal
+    ax.set_aspect("equal")
+
+    # Set the x and y labels and title of the plot
+    ax.set_xlabel("X (meters)")
+    ax.set_ylabel("Y (meters)")
+    ax.set_title("LIDAR Mapping")
+
     plt.show()
 
 
@@ -291,7 +303,7 @@ def split_graph(n=16, x_min=-2, x_max=2, y_min=-2, y_max=2):
 
 
 # ------------------------- Getting quadrants answers ------------------------ #
-labels = load_results_from_txt("data\\run_2\\labels.txt")
+labels = load_results_from_txt("D:\\Projects\\IC-6G\\Slamtec 2D LiDAR\\codes\\data\\run_2\\labels.txt")
 
 # ----------------------- Dividing x and y into squares ---------------------- #
 # Fixed square size of 1x1m, that is, 16 squares (Default values)
@@ -301,15 +313,13 @@ num_quadrants = len(squares)
 # ----------------------------- Getting readings ----------------------------- #
 # Get array of readings
 print("Reading file...")
-readings = read_readings_from_file(
-    "corrected_all_4_lidars.txt", "data\\run_2"
-)
+readings = read_readings_from_file("corrected_all_4_lidars.txt", "D:\\Projects\\IC-6G\\Slamtec 2D LiDAR\\codes\\data\\run_2")
 print("Number of readings:", len(readings))
 
 #! In this case the readings are already filtered to a square of 4x4m
 
 # ----------------------------- Using tensorFlow ----------------------------- #
-runs = 1  # Number os training cycles
+runs = 16000  # Number os training cycles
 #! In order to set the epochs dynamically, you could use the Early Stopping from Keras
 
 # Define your model
@@ -330,34 +340,31 @@ y = np.array(labels)  # Labels
 # [0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0]
 
 # Split your data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train your model
 print("Training model...")
 model.fit(X_train, y_train, epochs=runs, validation_data=(X_test, y_test))
 
 # ---------------------- Evaluation and result checking ---------------------- #
+# The evaluation function will use the 20% of the data that was left out for testing
 evaluate_model(model, X_test, y_test)
 
 # After training your model
-save_model(model, "run_2")
+# save_model(model, "run_2")
 
-# When you need to use the model
-loaded_model = load_trained_model("saved_models/run_2.h5")
+# # When you need to use the model
+# loaded_model = load_trained_model("saved_models/run_2.h5")
 
-# print(
-#     "\n# ------------------------------ Testing it out ------------------------------ #\n"
-# )
+# print("\n# ------------------------------ Testing it out ------------------------------ #\n")
 
-# # ------------------------------ Testing it out ------------------------------ #
-# # Predict using the trained model
+# ------------------------------ Testing it out ------------------------------ #
+# Predict using the trained model
 # print("Using trained model...")
 # new_predictions = predict_new_readings(model, readings, squares)
 
 
-# # Visualization for each reading group
+# Visualization for each reading group
 # for i, reading_group in enumerate(readings):
 #     prediction = new_predictions[i]
 #     print("Predicted square:", prediction)
