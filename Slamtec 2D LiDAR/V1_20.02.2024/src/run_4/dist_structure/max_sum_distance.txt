@@ -1,0 +1,8 @@
+Max sum distance for n_16_corrected_lidar_1.txt: 1336.330771391674
+Max sum distance for n_16_corrected_lidar_1_and_3.txt: 2796.3314171624693
+Max sum distance for n_16_corrected_lidar_1_2_and_3.txt: 2884.68628183193
+Max sum distance for n_16_corrected_all_4_lidars.txt: 3049.1553448453137
+Max sum distance for n_64_corrected_lidar_1.txt: 1336.330771391674
+Max sum distance for n_64_corrected_lidar_1_and_3.txt: 2668.9164579809885
+Max sum distance for n_64_corrected_lidar_1_2_and_3.txt: 2717.003164525655
+Max sum distance for n_64_corrected_all_4_lidars.txt: 2822.8472612314813
